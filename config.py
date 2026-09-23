@@ -19,8 +19,9 @@ CLIENTS = {
         # Keeps the actual password out of source code.
         "password_env": "CLIENT_TEXAS_ROADHOUSE_PASSWORD",
         "brands": {
-            "Texas Roadhouse": {
+                "Texas Roadhouse": {
                 "collector_ids": ["167930110", "176162591"],
+                "survey_id": "128311344",
             },
             # Example of how a second brand would be added later:
             # "Bubba's 33": {

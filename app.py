@@ -64,11 +64,6 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-@app.route("/debug/surveys")
-@login_required
-def debug_surveys():
-    data = sm.list_surveys(title="Texas Roadhouse")
-    return jsonify(data)
 
 @app.route("/dashboard")
 @login_required
@@ -83,8 +78,7 @@ def dashboard():
     collector_ids = client_cfg["brands"][brand_name]["collector_ids"]
     responses = sm.get_brand_responses(collector_ids, start_created_at=RESPONSES_START_DATE)
 
-    # Assumes all collectors for one brand point at the same underlying survey.
-    survey_id = sm.get_collector_info(collector_ids[0])["survey_id"]
+        survey_id = client_cfg["brands"][brand_name]["survey_id"]
     survey_details = sm.get_survey_details(survey_id)
     question_map, ordered_question_ids = build_question_map(survey_details)
 
