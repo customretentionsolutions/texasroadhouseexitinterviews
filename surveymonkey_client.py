@@ -75,10 +75,11 @@ def get_collector_responses(collector_id, per_page=100):
         resp = requests.get(url, headers=_headers(), params=params, timeout=30)
         resp.raise_for_status()
         payload = resp.json()
-        all_responses.extend(payload.get("data", []))
+        page_data = payload.get("data", [])
+        all_responses.extend(page_data)
 
         next_link = payload.get("links", {}).get("next")
-        if next_link:
+        if next_link and page_data:
             url = next_link
             params = None  # next link already includes query params
         else:
