@@ -71,7 +71,9 @@ def get_collector_responses(collector_id, per_page=100):
     url = f"{BASE_URL}/collectors/{collector_id}/responses/bulk"
     params = {"per_page": per_page, "page": 1}
 
-    while url:
+    max_pages = 1  # TEMPORARY - for testing
+    pages_fetched = 0
+    while url and pages_fetched < max_pages:
         resp = requests.get(url, headers=_headers(), params=params, timeout=30)
         resp.raise_for_status()
         payload = resp.json()
@@ -84,6 +86,7 @@ def get_collector_responses(collector_id, per_page=100):
             params = None  # next link already includes query params
         else:
             url = None
+        pages_fetched += 1
 
     _cache[cache_key] = (now, all_responses)
     return all_responses
