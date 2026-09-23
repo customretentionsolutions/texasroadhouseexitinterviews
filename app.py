@@ -77,7 +77,7 @@ def dashboard():
         brand_name = next(iter(client_cfg["brands"]))
 
     collector_ids = client_cfg["brands"][brand_name]["collector_ids"]
-    responses = sm.get_brand_responses(collector_ids)
+    responses = sm.get_brand_responses(collector_ids, start_created_at="2026-01-01T00:00:00Z")
 
     return render_template(
         "dashboard.html",

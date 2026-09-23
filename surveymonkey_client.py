@@ -55,12 +55,15 @@ def get_survey_details(survey_id):
     return _cached_get(f"survey_details:{survey_id}", url)
 
 
-def get_collector_responses(collector_id, per_page=100):
+def get_collector_responses(collector_id, per_page=100, start_created_at=None):
     """
-    Returns all completed responses for a single collector, paginating
-    through SurveyMonkey's API as needed.
+    Returns completed responses for a single collector, paginating
+    through SurveyMonkey's API as needed. If start_created_at is given
+    (ISO 8601, e.g. "2026-01-01T00:00:00Z"), only responses created on
+    or after that date are fetched - filtered by SurveyMonkey's API
+    itself, not just after the fact, to keep memory usage down.
     """
-    cache_key = f"responses:{collector_id}"
+    cache_key = f"responses:{collector_id}:{start_created_at}"
     now = time.time()
     if cache_key in _cache:
         ts, data = _cache[cache_key]
@@ -70,10 +73,10 @@ def get_collector_responses(collector_id, per_page=100):
     all_responses = []
     url = f"{BASE_URL}/collectors/{collector_id}/responses/bulk"
     params = {"per_page": per_page, "page": 1}
+    if start_created_at:
+        params["start_created_at"] = start_created_at
 
-    max_pages = 1  # TEMPORARY - for testing
-    pages_fetched = 0
-    while url and pages_fetched < max_pages:
+    while url:
         resp = requests.get(url, headers=_headers(), params=params, timeout=30)
         resp.raise_for_status()
         payload = resp.json()
@@ -86,17 +89,15 @@ def get_collector_responses(collector_id, per_page=100):
             params = None  # next link already includes query params
         else:
             url = None
-        pages_fetched += 1
 
     _cache[cache_key] = (now, all_responses)
     return all_responses
 
-
-def get_brand_responses(collector_ids):
+def get_brand_responses(collector_ids, start_created_at=None):
     """Combines responses across multiple collectors for one brand."""
     combined = []
     for cid in collector_ids:
-        combined.extend(get_collector_responses(cid))
+        combined.extend(get_collector_responses(cid, start_created_at=start_created_at))
     return combined
 
 
