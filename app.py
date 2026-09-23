@@ -5,6 +5,8 @@ a searchable/filterable table of actual questions and answers.
 """
 
 import os
+import json
+from collections import Counter
 from functools import wraps
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
@@ -84,6 +86,10 @@ def dashboard():
 
     columns, rows = responses_to_table(responses, question_map, ordered_question_ids)
 
+    position_counts = Counter((r.get("Position") or "Unknown") for r in rows)
+    chart_labels_json = json.dumps(list(position_counts.keys()))
+    chart_values_json = json.dumps(list(position_counts.values()))	
+
     # --- Filters ---
     search_term = request.args.get("search", "").strip()
     filter_question = request.args.get("filter_question", "")
@@ -112,6 +118,8 @@ def dashboard():
         filter_question=filter_question,
         filter_answer=filter_answer,
         filterable_questions=columns[1:],  # everything except "Date Submitted"
+	chart_labels_json=chart_labels_json,
+        chart_values_json=chart_values_json,
     )
 
 
