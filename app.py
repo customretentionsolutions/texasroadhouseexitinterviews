@@ -78,7 +78,7 @@ def dashboard():
     collector_ids = client_cfg["brands"][brand_name]["collector_ids"]
     responses = sm.get_brand_responses(collector_ids, start_created_at=RESPONSES_START_DATE)
 
-        survey_id = client_cfg["brands"][brand_name]["survey_id"]
+    survey_id = client_cfg["brands"][brand_name]["survey_id"]
     survey_details = sm.get_survey_details(survey_id)
     question_map, ordered_question_ids = build_question_map(survey_details)
 
