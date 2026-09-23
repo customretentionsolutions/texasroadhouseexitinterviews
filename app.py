@@ -86,6 +86,13 @@ def dashboard():
 
     columns, rows = responses_to_table(responses, question_map, ordered_question_ids)
 
+    all_question_columns = columns[1:]  # everything except "Date Submitted"
+    selected_columns = request.args.getlist("cols")
+    if not selected_columns:
+        # Nothing chosen yet - show a short default set instead of all ~50 questions
+        selected_columns = all_question_columns[:5]
+    display_columns = ["Date Submitted"] + [c for c in all_question_columns if c in selected_columns]
+
     position_counts = Counter((r.get("Position") or "Unknown") for r in rows)
     chart_labels_json = json.dumps(list(position_counts.keys()))
     chart_values_json = json.dumps(list(position_counts.values()))	
@@ -106,19 +113,21 @@ def dashboard():
         needle = filter_answer.lower()
         rows = [r for r in rows if needle in str(r.get(filter_question, "")).lower()]
 
-    return render_template(
+        return render_template(
         "dashboard.html",
         client_display_name=client_cfg["display_name"],
         brands=list(client_cfg["brands"].keys()),
         active_brand=brand_name,
-        columns=columns,
+        columns=display_columns,
         rows=rows,
         response_count=len(rows),
         search_term=search_term,
         filter_question=filter_question,
         filter_answer=filter_answer,
-        filterable_questions=columns[1:],  # everything except "Date Submitted"
-	chart_labels_json=chart_labels_json,
+        filterable_questions=all_question_columns,
+        all_question_columns=all_question_columns,
+        selected_columns=selected_columns,
+        chart_labels_json=chart_labels_json,
         chart_values_json=chart_values_json,
     )
 
