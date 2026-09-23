@@ -7,7 +7,7 @@ a searchable/filterable table of actual questions and answers.
 import os
 from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 
 from config import CLIENTS
 import surveymonkey_client as sm
@@ -64,6 +64,11 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+@app.route("/debug/surveys")
+@login_required
+def debug_surveys():
+    data = sm.list_surveys(title="Texas Roadhouse")
+    return jsonify(data)
 
 @app.route("/dashboard")
 @login_required

@@ -54,6 +54,12 @@ def get_survey_details(survey_id):
     url = f"{BASE_URL}/surveys/{survey_id}/details"
     return _cached_get(f"survey_details:{survey_id}", url)
 
+def list_surveys(title=None):
+    """Lists surveys, optionally filtered by title."""
+    url = f"{BASE_URL}/surveys"
+    params = {"title": title} if title else {}
+    return _cached_get(f"surveys_list:{title}", url, params)
+
 
 def get_collector_responses(collector_id, per_page=100, start_created_at=None):
     """
