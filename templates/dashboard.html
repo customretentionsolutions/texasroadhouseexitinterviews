@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ client_display_name }} Dashboard{% endblock %}
+{% block body %}
+<header>
+  <strong>{{ client_display_name }}</strong>
+  <a href="{{ url_for('logout') }}">Log out</a>
+</header>
+<main>
+  <div class="tabs">
+    {% for brand in brands %}
+      <a href="{{ url_for('dashboard', brand=brand) }}"
+         class="{{ 'active' if brand == active_brand else '' }}">{{ brand }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h3>{{ active_brand }} — {{ response_count }} responses</h3>
+    <p style="color:#6b7280; font-size: 14px;">
+      This is a raw data view for now — filtering, sorting, and charts are coming next.
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Response ID</th>
+          <th>Date Submitted</th>
+          <th>Date Modified</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in responses %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>{{ r.date_created }}</td>
+          <td>{{ r.date_modified }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

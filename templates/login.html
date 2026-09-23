@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block body %}
+<main style="max-width: 400px; margin-top: 100px;">
+  <div class="card">
+    <h2>Client Portal Login</h2>
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+    <form method="POST">
+      <input type="password" name="password" placeholder="Password" autofocus required>
+      <button type="submit">Log In</button>
+    </form>
+  </div>
+</main>
+{% endblock %}
