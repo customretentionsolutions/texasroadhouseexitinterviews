@@ -1,10 +1,7 @@
 """
 Client-facing portal: lets one client log in and see their own exit
-interview responses, combined across collectors, grouped by brand.
-
-This is intentionally minimal right now (login + raw response table).
-Filtering, sorting, and charts get layered in once we've nailed down
-exactly what the client should be able to do.
+interview responses, combined across collectors, grouped by brand, as
+a searchable/filterable table of actual questions and answers.
 """
 
 import os
@@ -14,9 +11,14 @@ from flask import Flask, render_template, request, redirect, url_for, session
 
 from config import CLIENTS
 import surveymonkey_client as sm
+from response_utils import build_question_map, responses_to_table
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
+
+# Only pull responses from this date forward - keeps memory/load reasonable
+# and matches what the client actually wants to see.
+RESPONSES_START_DATE = "2026-01-01T00:00:00Z"
 
 
 def login_required(view):
@@ -41,9 +43,6 @@ def login():
     if request.method == "POST":
         entered_password = request.form.get("password", "")
 
-        # Check the entered password against every configured client.
-        # With one client today this is simple; with more clients later,
-        # each still gets its own separate password.
         matched_client_key = None
         for client_key, client_cfg in CLIENTS.items():
             expected = os.environ.get(client_cfg["password_env"])
@@ -77,15 +76,43 @@ def dashboard():
         brand_name = next(iter(client_cfg["brands"]))
 
     collector_ids = client_cfg["brands"][brand_name]["collector_ids"]
-    responses = sm.get_brand_responses(collector_ids, start_created_at="2026-01-01T00:00:00Z")
+    responses = sm.get_brand_responses(collector_ids, start_created_at=RESPONSES_START_DATE)
+
+    # Assumes all collectors for one brand point at the same underlying survey.
+    survey_id = sm.get_collector_info(collector_ids[0])["survey_id"]
+    survey_details = sm.get_survey_details(survey_id)
+    question_map, ordered_question_ids = build_question_map(survey_details)
+
+    columns, rows = responses_to_table(responses, question_map, ordered_question_ids)
+
+    # --- Filters ---
+    search_term = request.args.get("search", "").strip()
+    filter_question = request.args.get("filter_question", "")
+    filter_answer = request.args.get("filter_answer", "").strip()
+
+    if search_term:
+        needle = search_term.lower()
+        rows = [
+            r for r in rows
+            if any(needle in str(v).lower() for k, v in r.items() if k != "_id")
+        ]
+
+    if filter_question and filter_answer:
+        needle = filter_answer.lower()
+        rows = [r for r in rows if needle in str(r.get(filter_question, "")).lower()]
 
     return render_template(
         "dashboard.html",
         client_display_name=client_cfg["display_name"],
         brands=list(client_cfg["brands"].keys()),
         active_brand=brand_name,
-        responses=responses,
-        response_count=len(responses),
+        columns=columns,
+        rows=rows,
+        response_count=len(rows),
+        search_term=search_term,
+        filter_question=filter_question,
+        filter_answer=filter_answer,
+        filterable_questions=columns[1:],  # everything except "Date Submitted"
     )
 
 

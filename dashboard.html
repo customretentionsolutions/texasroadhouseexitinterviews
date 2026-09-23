@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ client_display_name }} Dashboard{% endblock %}
+{% block body %}
+<header>
+  <strong>{{ client_display_name }}</strong>
+  <a href="{{ url_for('logout') }}">Log out</a>
+</header>
+<main>
+  <div class="tabs">
+    {% for brand in brands %}
+      <a href="{{ url_for('dashboard', brand=brand) }}"
+         class="{{ 'active' if brand == active_brand else '' }}">{{ brand }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h3>{{ active_brand }} — {{ response_count }} responses (2026)</h3>
+
+    <form method="GET" style="margin-bottom: 16px; display:flex; gap:8px; flex-wrap: wrap; align-items:center;">
+      <input type="hidden" name="brand" value="{{ active_brand }}">
+
+      <input type="text" name="search" placeholder="Search all comments..."
+             value="{{ search_term }}"
+             style="flex:1; min-width:220px; padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+
+      <select name="filter_question" style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+        <option value="">Filter by question...</option>
+        {% for q in filterable_questions %}
+          <option value="{{ q }}" {{ 'selected' if q == filter_question else '' }}>{{ q }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="filter_answer" placeholder="...contains answer"
+             value="{{ filter_answer }}"
+             style="padding:8px; border:1px solid #d1d5db; border-radius:6px;">
+
+      <button type="submit">Apply</button>
+      {% if search_term or filter_question %}
+        <a href="{{ url_for('dashboard', brand=active_brand) }}" style="color:#6b7280; text-decoration:none;">Clear filters</a>
+      {% endif %}
+    </form>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            {% for col in columns %}
+              <th>{{ col }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            {% for col in columns %}
+              <td>{{ row.get(col, "") }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+{% endblock %}
